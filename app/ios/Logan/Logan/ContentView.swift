@@ -2,20 +2,14 @@
 //  ContentView.swift
 //  Logan
 //
-//  Created by jonathan lor on 2/7/26.
+//  Created by jon on 2/7/26.
 //
 
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        FeedView()
     }
 }
 

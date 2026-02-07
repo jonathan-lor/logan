@@ -89,3 +89,4 @@ out/
 *.tmp
 *.temp
 .cache/
+.claude/

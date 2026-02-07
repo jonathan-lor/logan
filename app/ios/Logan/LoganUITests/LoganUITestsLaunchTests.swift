@@ -2,7 +2,7 @@
 //  LoganUITestsLaunchTests.swift
 //  LoganUITests
 //
-//  Created by jonathan lor on 2/7/26.
+//  Created by jon on 2/7/26.
 //
 
 import XCTest
