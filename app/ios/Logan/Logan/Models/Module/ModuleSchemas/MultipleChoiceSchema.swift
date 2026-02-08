@@ -9,10 +9,6 @@ import Foundation
 
 struct MultipleChoiceSchema: Decodable {
     let question: String
-    let answers: [Answer]
-    
-    struct Answer: Decodable {
-        let content: String
-        let correct: Bool
-    }
+    let answer: [Answer]
+
 }
