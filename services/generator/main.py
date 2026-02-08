@@ -48,6 +48,6 @@ results = llm.get_question_json(p.generate_prompt(prompt, num))
 print(results.model_dump_json(indent=4))
 
 
-result = collection.insert_many([q.model_dump() for q in results.Questions])
+#result = collection.insert_many([q.model_dump() for q in results.Questions])
 
-print(f"INSERTED: {result.inserted_ids}")
+#print(f"INSERTED: {result.inserted_ids}")

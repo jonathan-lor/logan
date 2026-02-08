@@ -21,9 +21,12 @@ class TrueOrFalse(BaseModel):
 class TwoTruthsAndLie(BaseModel):
     answer: List[AnswerChoice]
 
+# get rid of guess word
+"""
 class GuessWord(BaseModel):
     question: str
     answer: str
+"""
 
 class WhichCameFirst(BaseModel):
     question: str
@@ -33,6 +36,7 @@ class WhichCameFirst(BaseModel):
 # WORDLE
 #########################################################
 
+"""
 class WordleLetter(BaseModel):
     character: str = Field(description="A letter present in the word")
     value: int = Field(description="The value for correctness of the letter. Determining if the letter is 0 = not present in the word, 1 = misplaced in the word, or 2 = in the word and placed correctly")
@@ -42,9 +46,10 @@ class WordleWord(BaseModel):
     values: List[WordleLetter] = Field(description="List containing ALL the letters found in the word in their order and their respective values")
 
 
-class Wordle(BaseModel):
+class WordleInOne(BaseModel):
     incorrect_guess: WordleWord = Field(description="An incorrect guess for the user to utilize to get their answer. This word should be FIVE LETTERS include correct letters, incorrect letters, and misplaced letters so the user can give an accurate guess. Treat this like a hint to the actual word")
     answer: str = Field(description="Correct answer for the wordle. Should be FIVE LETTERS")
+"""
 
 
 # implement
@@ -58,16 +63,16 @@ class MatchPairs(BaseModel):
 
 
 class Question(BaseModel):
-    type: Literal["MultipleChoice",
-                  "TrueOrFalse",
-                  "TwoTruthsAndLie",
-                  "GuessWord",
-                  "WhichCameFirst",
-                  "MatchPairs",
-                  "OrderedList",
-                  "Wordle"]
+    type: Literal["MultipleChoice", 
+                  "TrueOrFalse", 
+                  "TwoTruthsAndLie", 
+                  "WhichCameFirst", 
+                  "MatchPairs", 
+                  "OrderedList"]
     tags: List[str]
-    data: Union[MultipleChoice, TrueOrFalse, TwoTruthsAndLie, GuessWord, WhichCameFirst, MatchPairs, OrderedList, Wordle]
+    explanation: str = Field("A brief but educational insight into the answer of the question as a factoid.")
+    data: Union[MultipleChoice, TrueOrFalse, TwoTruthsAndLie, WhichCameFirst, MatchPairs, OrderedList]
+    
 
 class QuestionChunk(BaseModel):
     Questions: List[Question]
