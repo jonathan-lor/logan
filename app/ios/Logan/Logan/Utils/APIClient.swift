@@ -30,7 +30,7 @@ enum APIError: Error, LocalizedError {
 
 final class APIClient {
     static let shared = APIClient(
-        baseURL: URL(string: "")!
+        baseURL: URL(string: "https://doitbuntu.tailbfe3f3.ts.net")!
     )
 
     private let baseURL: URL

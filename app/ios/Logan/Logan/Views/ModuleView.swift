@@ -86,11 +86,13 @@ private enum Haptic {
 
 struct ModuleView: View {
     let module: Module
+    @Environment(MasteryViewModel.self) private var mastery
     @State private var selectedAnswer: String? = nil
     @State private var orderedItems: [String] = []
     @State private var matchSelections: [String: String] = [:]
     @State private var guessSubmitted = false
     @State private var selectedPairLeft: String? = nil
+    @State private var hasReported = false
 
     private var isCompleted: Bool {
         selectedAnswer != nil || guessSubmitted || (matchPairsCount > 0 && matchSelections.count == matchPairsCount)
@@ -139,6 +141,7 @@ struct ModuleView: View {
         guessSubmitted = false
         matchSelections = [:]
         selectedPairLeft = nil
+        hasReported = false
         if case .orderedList(let ol) = module.data {
             orderedItems = ol.answer.shuffled()
         }
@@ -203,6 +206,10 @@ struct ModuleView: View {
                         Haptic.tap()
                         withAnimation(.easeInOut(duration: 0.25)) {
                             selectedAnswer = option
+                        }
+                        if !hasReported {
+                            hasReported = true
+                            mastery.recordResult(module: module, correct: isCorrect)
                         }
                     } label: {
                         Text(option)
@@ -338,7 +345,12 @@ struct ModuleView: View {
                     withAnimation(.easeInOut(duration: 0.25)) {
                         guessSubmitted = true
                     }
-                    orderedItems == ol.answer ? Haptic.success() : Haptic.error()
+                    let correct = orderedItems == ol.answer
+                    correct ? Haptic.success() : Haptic.error()
+                    if !hasReported {
+                        hasReported = true
+                        mastery.recordResult(module: module, correct: correct)
+                    }
                 } label: {
                     Text("SUBMIT")
                         .brutalButton(fill: Brutal.yellow)
@@ -396,6 +408,11 @@ struct ModuleView: View {
                                     matchSelections[left] = value
                                     selectedPairLeft = nil
                                 }
+                                if matchSelections.count == mp.answer.count && !hasReported {
+                                    hasReported = true
+                                    let allCorrect = matchSelections.allSatisfy { mp.answer[$0.key] == $0.value }
+                                    mastery.recordResult(module: module, correct: allCorrect)
+                                }
                             }
                         } label: {
                             Text(value)
@@ -447,6 +464,10 @@ struct ModuleView: View {
             Haptic.tap()
             withAnimation(.easeInOut(duration: 0.25)) {
                 selectedAnswer = answer.content
+            }
+            if !hasReported {
+                hasReported = true
+                mastery.recordResult(module: module, correct: answer.correct)
             }
         } label: {
             Text(answer.content)
