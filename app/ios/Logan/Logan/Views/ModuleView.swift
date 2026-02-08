@@ -8,49 +8,64 @@
 import SwiftUI
 
 struct ModuleView: View {
-    let num: Int
-    @State private var showingHint: Bool = false
-    
+    let module: Module
+    @State private var selectedAnswer: String? = nil
+
     var body: some View {
-        ZStack {
-            Color.clear
-                .contentShape(Rectangle())
-                .ignoresSafeArea()
-                .onTapGesture(count: 2) {
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        showingHint.toggle()
+        switch module.data {
+        case .multipleChoice(let mc):
+            multipleChoiceView(mc)
+        }
+    }
+
+    private func multipleChoiceView(_ mc: MultipleChoiceSchema) -> some View {
+        VStack(spacing: 24) {
+            Text(mc.question)
+                .font(.title2)
+                .fontWeight(.semibold)
+                .multilineTextAlignment(.center)
+
+            VStack(spacing: 12) {
+                ForEach(mc.answers, id: \.content) { answer in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            selectedAnswer = answer.content
+                        }
+                    } label: {
+                        Text(answer.content)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(backgroundColor(for: answer))
+                            .foregroundStyle(foregroundColor(for: answer))
+                            .cornerRadius(12)
                     }
+                    .disabled(selectedAnswer != nil)
                 }
-            
-            // Content layer respects safe area
-            ZStack {
-                moduleContent
-                    .rotation3DEffect(
-                        .degrees(showingHint ? 180 : 0),
-                        axis: (x: 0, y: 1, z: 0)
-                    )
-                    .opacity(showingHint ? 0 : 1)
-                
-                hintContent
-                    .rotation3DEffect(
-                        .degrees(showingHint ? 0 : -180),
-                        axis: (x: 0, y: 1, z: 0)
-                    )
-                    .opacity(showingHint ? 1 : 0)
             }
-            .padding(.horizontal, 16)
         }
+        .padding(.horizontal, 24)
     }
-    
-    private var moduleContent: some View {
-        VStack(alignment: .center, spacing: 16) {
-            Text("Module \(num)")
+
+    private func backgroundColor(for answer: MultipleChoiceSchema.Answer) -> Color {
+        guard let selected = selectedAnswer else {
+            return Color(.systemGray5)
         }
+        if answer.content == selected {
+            return answer.correct ? .green : .red
+        }
+        if answer.correct {
+            return .green.opacity(0.3)
+        }
+        return Color(.systemGray5)
     }
-    
-    private var hintContent: some View {
-        VStack(alignment: .center, spacing: 16) {
-            Text("Hint goes here")
+
+    private func foregroundColor(for answer: MultipleChoiceSchema.Answer) -> Color {
+        guard let selected = selectedAnswer else {
+            return .primary
         }
+        if answer.content == selected || answer.correct {
+            return .white
+        }
+        return .primary
     }
 }

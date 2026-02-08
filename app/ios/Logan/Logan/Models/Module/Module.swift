@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct Module: Decodable {
+struct Module: Decodable, Identifiable {
+    let id = UUID()
     let type: Kind
     let tags: [String]
     let data: DataPayload
@@ -36,8 +37,6 @@ struct Module: Decodable {
         case .multipleChoice:
             let mc = try container.decode(MultipleChoiceSchema.self, forKey: .data)
             self.data = .multipleChoice(mc)
-        default:
-            fatalError("Unhandled module type: \(kind)")
         }
     }
 }

@@ -8,16 +8,19 @@
 import SwiftUI
 
 struct FeedView: View {
-    
-    let items = [1,2,3,4,5,6,7,8,9,10]
-    
+    @State private var feed = FeedViewModel()
+
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(items, id: \.self) { item in
-                    ModuleView(num: item)
+                ForEach(feed.modules) { module in
+                    ModuleView(module: module)
                         .containerRelativeFrame(.vertical, alignment: .center)
                         .onAppear {
+                            // load more when the last module appears
+                            if module.id == feed.modules.last?.id {
+                                Task { await feed.loadModules() }
+                            }
                         }
                 }
             }
@@ -27,19 +30,7 @@ struct FeedView: View {
         .scrollTargetBehavior(.paging)
         .ignoresSafeArea()
         .task {
-            await diddy2()
+            await feed.loadModules()
         }
-    }
-}
-
-func diddy2() async {
-    print("diddy2")
-    
-    do {
-        //let result: APIResponse<Module> = try await api.get("/questions/random?tag=Pokemon")
-        let result: Module = try await APIClient.shared.getItem("/questions/random?tag=Pokemon")
-        print("yayaya \(result)")
-    } catch {
-        print("diddy2: an error occurred: \(error)")
     }
 }
