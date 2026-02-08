@@ -70,6 +70,7 @@ final class APIClient {
             let decoder = JSONDecoder()
             return try decoder.decode(T.self, from: data)
         } catch {
+            print("Raw response: \(String(data: data, encoding: .utf8) ?? "<non-utf8>")")
             throw APIError.decoding(error)
         }
     }

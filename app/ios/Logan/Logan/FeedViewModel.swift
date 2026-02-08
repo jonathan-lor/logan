@@ -21,7 +21,7 @@ final class FeedViewModel {
         defer { isLoadingModules = false }
 
         do {
-            let module: Module = try await APIClient.shared.getItem("/questions/random?tag=Pokemon")
+            let module: Module = try await APIClient.shared.getItem("/questions/random")
             modules.append(module)
         } catch {
             print("Failed to load module: \(error)")
