@@ -26,6 +26,11 @@ class PromptCreator:
 
         return f"Random seed(s): {seeds}\n Generate {num_questions} question(s) about {user_prompt}. Each question, choice, and wording must be strongly influenced by their relative seed."
 
+    def generate_topics(self, num_topics: int) -> str:
+        seeds = generate_seeds(num_topics)
+
+        return f"Random seeds: {seeds}\n Generate {num_topics} educational topics used for trivia to provide to an llm to generate questions. AVOID MATH TOPICS. Each topic and their difficulty must be strongly influenced by their relative seed."
+
 
 
 

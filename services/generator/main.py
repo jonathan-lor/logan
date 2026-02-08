@@ -1,4 +1,5 @@
 import os
+import time
 from dotenv import dotenv_values
 from google import genai
 from question_schemas import *
@@ -41,11 +42,28 @@ collection = db["questions"]
 p = PromptCreator()
 
 # query and return results from gemini
-results = llm.get_question_json(p.generate_prompt(prompt, num))
+#results = llm.get_question_json(p.generate_prompt(prompt, num))
+
+print("Gathering topics...")
+topics = llm.get_topic_json(p.generate_topics(10))
+
+topics_list = [topic.topic for topic in topics.topics]
+
+print(f"Got topics list: {topics_list}")
 
 
+for topic in topics_list:
+    print(f"Creating questions for {topic}")
 
-print(results.model_dump_json(indent=4))
+    results = llm.get_question_json(p.generate_prompt(topic, num))
+
+    result = collection.insert_many([q.model_dump() for q in results.Questions])
+
+    print(f"INSERTED {topic}: {result.inserted_ids}")
+
+    time.sleep(0.5)
+
+#print(results.model_dump_json(indent=4))
 
 
 #result = collection.insert_many([q.model_dump() for q in results.Questions])

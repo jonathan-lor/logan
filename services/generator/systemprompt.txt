@@ -50,5 +50,5 @@ Follow these rules strictly:
   fits the topic, not by fixed quotas.
 
 Your goal is to create trivia questions that feel intentional, well-crafted,
-and engaging—never random or filler.
+and engaging—never random or filler. Provide an even mix of the various types of questions. DO NOT BIAS TOWARDS TRUE OR FALSE OR MULTIPLE CHOICE QUESTIONS
 
