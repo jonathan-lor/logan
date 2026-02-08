@@ -12,16 +12,26 @@ private struct IdentifiableTag: Identifiable {
     init(_ tag: String) { self.id = tag }
 }
 
+private enum SortMode: String, CaseIterable {
+    case score = "Score"
+    case alphabetical = "A–Z"
+}
+
 struct MasteryView: View {
     @Environment(MasteryViewModel.self) private var mastery
     @State private var selectedTag: IdentifiableTag? = nil
+    @State private var sortMode: SortMode = .score
 
     private let bgColor = Color(red: 1.0, green: 0.99, blue: 0.95)
 
     private var sortedTags: [(tag: String, score: Int)] {
-        mastery.scores
-            .sorted { $0.value > $1.value }
-            .map { (tag: $0.key, score: $0.value) }
+        let items = mastery.scores.map { (tag: $0.key, score: $0.value) }
+        switch sortMode {
+        case .score:
+            return items.sorted { $0.score > $1.score }
+        case .alphabetical:
+            return items.sorted { $0.tag.localizedCaseInsensitiveCompare($1.tag) == .orderedAscending }
+        }
     }
 
     var body: some View {
@@ -32,7 +42,40 @@ struct MasteryView: View {
                 .tracking(2)
                 .foregroundStyle(.black)
                 .padding(.top, 60)
-                .padding(.bottom, 20)
+                .padding(.bottom, 12)
+
+            if !sortedTags.isEmpty {
+                HStack(spacing: 0) {
+                    ForEach(SortMode.allCases, id: \.self) { mode in
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                sortMode = mode
+                            }
+                        } label: {
+                            Text(mode.rawValue)
+                                .font(.caption)
+                                .fontWeight(.black)
+                                .tracking(1)
+                                .foregroundStyle(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(sortMode == mode ? Color(red: 1.0, green: 0.84, blue: 0.0) : .white)
+                        }
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(.black, lineWidth: 3)
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(.black)
+                        .offset(x: 5, y: 5)
+                )
+                .padding(.horizontal, 24)
+                .padding(.bottom, 12)
+            }
 
             if sortedTags.isEmpty {
                 Spacer()

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// MARK: - Neo-Brutalist Style Constants (local)
+// MARK: - Style Constants
 
 private enum Brutal {
     static let border: CGFloat = 3
@@ -65,7 +65,6 @@ struct MasteryDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
             HStack {
                 Button { dismiss() } label: {
                     Image(systemName: "xmark")
@@ -88,7 +87,6 @@ struct MasteryDetailView: View {
 
                 Spacer()
 
-                // Balance the close button
                 Image(systemName: "xmark")
                     .fontWeight(.black)
                     .foregroundStyle(.clear)
@@ -133,7 +131,6 @@ struct MasteryDetailView: View {
 
     private func moduleSummaryCard(_ module: Module) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Type badge
             Text(typeBadgeText(module.data))
                 .font(.caption2)
                 .fontWeight(.black)
@@ -144,16 +141,13 @@ struct MasteryDetailView: View {
                 .background(Brutal.black)
                 .clipShape(RoundedRectangle(cornerRadius: Brutal.radius))
 
-            // Question
             Text(questionText(module.data))
                 .font(.subheadline)
                 .fontWeight(.bold)
                 .foregroundStyle(Brutal.black)
 
-            // Answer summary
             answerSummary(module.data)
 
-            // Explanation
             VStack(alignment: .leading, spacing: 6) {
                 Text("EXPLANATION")
                     .font(.caption2)

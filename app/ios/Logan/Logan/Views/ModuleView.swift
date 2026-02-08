@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// MARK: - Neo-Brutalist Style Constants
+// MARK: - Style Constants
 
 private enum Brutal {
     static let border: CGFloat = 3
@@ -79,6 +79,68 @@ private enum Haptic {
     }
     static func error() {
         UINotificationFeedbackGenerator().notificationOccurred(.error)
+    }
+}
+
+// MARK: - Title Case
+
+private extension String {
+    var titleCased: String {
+        self.lowercased()
+            .split(separator: " ")
+            .map { $0.prefix(1).uppercased() + $0.dropFirst() }
+            .joined(separator: " ")
+    }
+}
+
+// MARK: - Flow Layout
+
+private struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = computeRows(proposal: proposal, subviews: subviews)
+        var height: CGFloat = 0
+        for (i, row) in rows.enumerated() {
+            let rowHeight = row.map { $0.sizeThatFits(.unspecified).height }.max() ?? 0
+            height += rowHeight
+            if i < rows.count - 1 { height += spacing }
+        }
+        return CGSize(width: proposal.width ?? 0, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let rows = computeRows(proposal: proposal, subviews: subviews)
+        var y = bounds.minY
+        for row in rows {
+            let rowHeight = row.map { $0.sizeThatFits(.unspecified).height }.max() ?? 0
+            var x = bounds.minX
+            // Center the row
+            let rowWidth = row.map { $0.sizeThatFits(.unspecified).width }.reduce(0, +) + CGFloat(max(row.count - 1, 0)) * spacing
+            x += (bounds.width - rowWidth) / 2
+            for subview in row {
+                let size = subview.sizeThatFits(.unspecified)
+                subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+                x += size.width + spacing
+            }
+            y += rowHeight + spacing
+        }
+    }
+
+    private func computeRows(proposal: ProposedViewSize, subviews: Subviews) -> [[LayoutSubviews.Element]] {
+        let maxWidth = proposal.width ?? .infinity
+        var rows: [[LayoutSubviews.Element]] = [[]]
+        var currentWidth: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentWidth + size.width > maxWidth && !rows[rows.count - 1].isEmpty {
+                rows.append([])
+                currentWidth = 0
+            }
+            rows[rows.count - 1].append(subview)
+            currentWidth += size.width + spacing
+        }
+        return rows
     }
 }
 
@@ -168,6 +230,32 @@ struct ModuleView: View {
         .padding(.horizontal, 24)
     }
 
+    // MARK: - Tags
+
+    private static let tagColors: [Color] = [
+        Brutal.pink, Color(red: 1.0, green: 0.65, blue: 0.25), Brutal.yellow, Brutal.blue, Brutal.green
+    ]
+
+    private static func tagColor(for tag: String) -> Color {
+        let hash = tag.lowercased().unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
+        return tagColors[abs(hash) % tagColors.count]
+    }
+
+    private var tagRow: some View {
+        FlowLayout(spacing: 8) {
+            ForEach(module.tags, id: \.self) { tag in
+                Text(tag.titleCased)
+                    .font(.caption2)
+                    .fontWeight(.black)
+                    .tracking(1)
+                    .foregroundStyle(Brutal.black)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .brutalCard(fill: Self.tagColor(for: tag))
+            }
+        }
+    }
+
     // MARK: - Question Header
 
     private func questionHeader(_ text: String) -> some View {
@@ -182,6 +270,7 @@ struct ModuleView: View {
 
     private func multipleChoiceView(_ mc: MultipleChoiceSchema) -> some View {
         VStack(spacing: 16) {
+            tagRow
             questionHeader(mc.question)
 
             VStack(spacing: 12) {
@@ -197,6 +286,7 @@ struct ModuleView: View {
 
     private func trueOrFalseView(_ tf: TrueOrFalseSchema) -> some View {
         VStack(spacing: 16) {
+            tagRow
             questionHeader(tf.question)
 
             HStack(spacing: 14) {
@@ -235,6 +325,7 @@ struct ModuleView: View {
 
     private func whichCameFirstView(_ wc: WhichCameFirstSchema) -> some View {
         VStack(spacing: 16) {
+            tagRow
             questionHeader(wc.question)
 
             VStack(spacing: 12) {
@@ -250,6 +341,7 @@ struct ModuleView: View {
 
     private func twoTruthsAndLieView(_ tt: TwoTruthsAndLieSchema) -> some View {
         VStack(spacing: 16) {
+            tagRow
             questionHeader("Two Truths and a Lie")
 
             Text("FIND THE LIE!")
@@ -271,6 +363,7 @@ struct ModuleView: View {
 
     private func orderedListView(_ ol: OrderedListSchema) -> some View {
         VStack(spacing: 16) {
+            tagRow
             questionHeader(ol.question)
 
             VStack(spacing: 10) {
@@ -375,6 +468,7 @@ struct ModuleView: View {
         let values = Array(mp.answer.values).sorted()
 
         return VStack(spacing: 16) {
+            tagRow
             questionHeader(mp.question)
 
             HStack(alignment: .top, spacing: 12) {
