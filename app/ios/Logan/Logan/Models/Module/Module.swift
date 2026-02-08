@@ -11,6 +11,7 @@ struct Module: Decodable, Identifiable {
     let id = UUID()
     let type: Kind
     let tags: [String]
+    let explanation: String
     let data: DataPayload
 
     enum Kind: String, Decodable {
@@ -25,6 +26,7 @@ struct Module: Decodable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case type
         case tags
+        case explanation
         case data
     }
 
@@ -34,6 +36,7 @@ struct Module: Decodable, Identifiable {
         let kind = try container.decode(Kind.self, forKey: .type)
         self.type = kind
         self.tags = try container.decode([String].self, forKey: .tags)
+        self.explanation = try container.decode(String.self, forKey: .explanation)
 
         switch kind {
         case .multipleChoice:

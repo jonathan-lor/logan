@@ -93,7 +93,7 @@ struct ModuleView: View {
     @State private var selectedPairLeft: String? = nil
 
     private var isCompleted: Bool {
-        selectedAnswer != nil || guessSubmitted || matchSelections.count == matchPairsCount
+        selectedAnswer != nil || guessSubmitted || (matchPairsCount > 0 && matchSelections.count == matchPairsCount)
     }
 
     @State private var matchPairsCount: Int = 0
@@ -117,6 +117,8 @@ struct ModuleView: View {
             }
 
             if isCompleted {
+                explanationCard
+
                 Button {
                     Haptic.light()
                     withAnimation(.easeInOut(duration: 0.25)) {
@@ -140,6 +142,27 @@ struct ModuleView: View {
         if case .orderedList(let ol) = module.data {
             orderedItems = ol.answer.shuffled()
         }
+    }
+
+    // MARK: - Explanation
+
+    private var explanationCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("EXPLANATION")
+                .font(.caption)
+                .fontWeight(.black)
+                .tracking(2)
+                .foregroundStyle(Brutal.black)
+
+            Text(module.explanation)
+                .font(.subheadline)
+                .foregroundStyle(Brutal.black)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .brutalCard(fill: Brutal.cream)
+        .padding(.horizontal, 24)
     }
 
     // MARK: - Question Header
