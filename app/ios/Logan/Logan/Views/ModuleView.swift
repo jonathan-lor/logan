@@ -7,12 +7,88 @@
 
 import SwiftUI
 
+// MARK: - Neo-Brutalist Style Constants
+
+private enum Brutal {
+    static let border: CGFloat = 3
+    static let shadow: CGFloat = 5
+    static let radius: CGFloat = 4
+    static let cream = Color(red: 1.0, green: 0.99, blue: 0.95)
+    static let black = Color.black
+    static let white = Color.white
+    static let green = Color(red: 0.29, green: 0.87, blue: 0.50)
+    static let red = Color(red: 1.0, green: 0.42, blue: 0.42)
+    static let yellow = Color(red: 1.0, green: 0.84, blue: 0.0)
+    static let blue = Color(red: 0.35, green: 0.55, blue: 1.0)
+    static let pink = Color(red: 1.0, green: 0.56, blue: 0.68)
+    static let purple = Color(red: 0.69, green: 0.53, blue: 1.0)
+}
+
+private struct BrutalCard: ViewModifier {
+    var fill: Color = Brutal.white
+    func body(content: Content) -> some View {
+        content
+            .background(fill)
+            .clipShape(RoundedRectangle(cornerRadius: Brutal.radius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Brutal.radius)
+                    .stroke(Brutal.black, lineWidth: Brutal.border)
+            )
+            .background(
+                RoundedRectangle(cornerRadius: Brutal.radius)
+                    .fill(Brutal.black)
+                    .offset(x: Brutal.shadow, y: Brutal.shadow)
+            )
+    }
+}
+
+private struct BrutalButton: ViewModifier {
+    var fill: Color = Brutal.white
+    func body(content: Content) -> some View {
+        content
+            .font(.headline)
+            .fontWeight(.bold)
+            .foregroundStyle(Brutal.black)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .padding(.horizontal, 16)
+            .modifier(BrutalCard(fill: fill))
+    }
+}
+
+private extension View {
+    func brutalCard(fill: Color = Brutal.white) -> some View {
+        modifier(BrutalCard(fill: fill))
+    }
+    func brutalButton(fill: Color = Brutal.white) -> some View {
+        modifier(BrutalButton(fill: fill))
+    }
+}
+
+// MARK: - Haptics
+
+private enum Haptic {
+    static func tap() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+    static func light() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+    static func success() {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+    static func error() {
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+    }
+}
+
+// MARK: - ModuleView
+
 struct ModuleView: View {
     let module: Module
     @State private var selectedAnswer: String? = nil
     @State private var orderedItems: [String] = []
     @State private var matchSelections: [String: String] = [:]
-    @State private var guessText: String = ""
     @State private var guessSubmitted = false
     @State private var selectedPairLeft: String? = nil
 
@@ -20,11 +96,10 @@ struct ModuleView: View {
         selectedAnswer != nil || guessSubmitted || matchSelections.count == matchPairsCount
     }
 
-    // Stored on appear so we can check match completion without the schema
     @State private var matchPairsCount: Int = 0
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             switch module.data {
             case .multipleChoice(let mc):
                 multipleChoiceView(mc)
@@ -35,8 +110,6 @@ struct ModuleView: View {
             case .matchPairs(let mp):
                 matchPairsView(mp)
                     .onAppear { matchPairsCount = mp.answer.count }
-            case .guessWord(let gw):
-                guessWordView(gw)
             case .twoTruthsAndLie(let tt):
                 twoTruthsAndLieView(tt)
             case .whichCameFirst(let wc):
@@ -45,13 +118,15 @@ struct ModuleView: View {
 
             if isCompleted {
                 Button {
+                    Haptic.light()
                     withAnimation(.easeInOut(duration: 0.25)) {
                         reset()
                     }
                 } label: {
                     Label("Try Again", systemImage: "arrow.counterclockwise")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .fontWeight(.black)
+                        .foregroundStyle(Brutal.black)
                 }
             }
         }
@@ -59,24 +134,29 @@ struct ModuleView: View {
 
     private func reset() {
         selectedAnswer = nil
-        guessText = ""
         guessSubmitted = false
         matchSelections = [:]
         selectedPairLeft = nil
-        // Re-shuffle ordered list
         if case .orderedList(let ol) = module.data {
             orderedItems = ol.answer.shuffled()
         }
     }
 
+    // MARK: - Question Header
+
+    private func questionHeader(_ text: String) -> some View {
+        Text(text)
+            .font(.title2)
+            .fontWeight(.black)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(Brutal.black)
+    }
+
     // MARK: - Multiple Choice
 
     private func multipleChoiceView(_ mc: MultipleChoiceSchema) -> some View {
-        VStack(spacing: 24) {
-            Text(mc.question)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.center)
+        VStack(spacing: 16) {
+            questionHeader(mc.question)
 
             VStack(spacing: 12) {
                 ForEach(mc.answer, id: \.content) { answer in
@@ -90,27 +170,20 @@ struct ModuleView: View {
     // MARK: - True or False
 
     private func trueOrFalseView(_ tf: TrueOrFalseSchema) -> some View {
-        VStack(spacing: 24) {
-            Text(tf.question)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.center)
+        VStack(spacing: 16) {
+            questionHeader(tf.question)
 
-            HStack(spacing: 16) {
+            HStack(spacing: 14) {
                 ForEach(["True", "False"], id: \.self) { option in
                     let isCorrect = (option == "True") == tf.answer
                     Button {
+                        Haptic.tap()
                         withAnimation(.easeInOut(duration: 0.25)) {
                             selectedAnswer = option
                         }
                     } label: {
                         Text(option)
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(tfBackground(option: option, isCorrect: isCorrect))
-                            .foregroundStyle(tfForeground(option: option, isCorrect: isCorrect))
-                            .cornerRadius(12)
+                            .brutalButton(fill: tfBackground(option: option, isCorrect: isCorrect))
                     }
                     .disabled(selectedAnswer != nil)
                 }
@@ -120,28 +193,19 @@ struct ModuleView: View {
     }
 
     private func tfBackground(option: String, isCorrect: Bool) -> Color {
-        guard let selected = selectedAnswer else { return Color(.systemGray5) }
+        guard let selected = selectedAnswer else { return Brutal.white }
         if option == selected {
-            return isCorrect ? .green : .red
+            return isCorrect ? Brutal.green : Brutal.red
         }
-        if isCorrect { return .green.opacity(0.3) }
-        return Color(.systemGray5)
-    }
-
-    private func tfForeground(option: String, isCorrect: Bool) -> Color {
-        guard let selected = selectedAnswer else { return .primary }
-        if option == selected || isCorrect { return .white }
-        return .primary
+        if isCorrect { return Brutal.green }
+        return Brutal.white
     }
 
     // MARK: - Which Came First
 
     private func whichCameFirstView(_ wc: WhichCameFirstSchema) -> some View {
-        VStack(spacing: 24) {
-            Text(wc.question)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.center)
+        VStack(spacing: 16) {
+            questionHeader(wc.question)
 
             VStack(spacing: 12) {
                 ForEach(wc.answer, id: \.content) { answer in
@@ -155,18 +219,17 @@ struct ModuleView: View {
     // MARK: - Two Truths and a Lie
 
     private func twoTruthsAndLieView(_ tt: TwoTruthsAndLieSchema) -> some View {
-        VStack(spacing: 24) {
-            Text("Two Truths and a Lie")
-                .font(.title2)
-                .fontWeight(.semibold)
+        VStack(spacing: 16) {
+            questionHeader("Two Truths and a Lie")
 
-            Text("Find the lie!")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            Text("FIND THE LIE!")
+                .font(.caption)
+                .fontWeight(.black)
+                .tracking(2)
+                .foregroundStyle(Brutal.red)
 
             VStack(spacing: 12) {
                 ForEach(tt.answer, id: \.content) { answer in
-                    // In two truths and a lie, the "correct" answer is the lie
                     answerButton(answer)
                 }
             }
@@ -177,80 +240,89 @@ struct ModuleView: View {
     // MARK: - Ordered List
 
     private func orderedListView(_ ol: OrderedListSchema) -> some View {
-        VStack(spacing: 24) {
-            Text(ol.question)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.center)
+        VStack(spacing: 16) {
+            questionHeader(ol.question)
 
-            VStack(spacing: 8) {
+            VStack(spacing: 10) {
                 ForEach(Array(orderedItems.enumerated()), id: \.offset) { index, item in
                     HStack {
-                        Text("\(index + 1).")
+                        Text("\(index + 1)")
                             .font(.headline)
-                            .frame(width: 30)
+                            .fontWeight(.black)
+                            .frame(width: 28, height: 28)
+                            .background(Brutal.yellow)
+                            .clipShape(RoundedRectangle(cornerRadius: Brutal.radius))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Brutal.radius)
+                                    .stroke(Brutal.black, lineWidth: 2)
+                            )
 
                         Text(item)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Brutal.black)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
                         if !guessSubmitted {
-                            VStack(spacing: 4) {
+                            HStack(spacing: 6) {
                                 Button {
+                                    Haptic.light()
                                     withAnimation(.easeInOut(duration: 0.2)) {
                                         guard index > 0 else { return }
                                         orderedItems.swapAt(index, index - 1)
                                     }
                                 } label: {
                                     Image(systemName: "chevron.up")
+                                        .fontWeight(.black)
                                         .font(.caption)
+                                        .foregroundStyle(index == 0 ? .gray : Brutal.black)
                                 }
                                 .disabled(index == 0)
 
                                 Button {
+                                    Haptic.light()
                                     withAnimation(.easeInOut(duration: 0.2)) {
                                         guard index < orderedItems.count - 1 else { return }
                                         orderedItems.swapAt(index, index + 1)
                                     }
                                 } label: {
                                     Image(systemName: "chevron.down")
+                                        .fontWeight(.black)
                                         .font(.caption)
+                                        .foregroundStyle(index == orderedItems.count - 1 ? .gray : Brutal.black)
                                 }
                                 .disabled(index == orderedItems.count - 1)
                             }
                         } else {
                             let correctIndex = ol.answer.firstIndex(of: item)
                             if correctIndex == index {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
+                                Image(systemName: "checkmark")
+                                    .fontWeight(.black)
+                                    .foregroundStyle(Brutal.green)
                             } else {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.red)
+                                Image(systemName: "xmark")
+                                    .fontWeight(.black)
+                                    .foregroundStyle(Brutal.red)
                             }
                         }
                     }
-                    .padding()
-                    .background(Color(.systemGray5))
-                    .cornerRadius(12)
+                    .padding(12)
+                    .brutalCard()
                 }
             }
 
             if !guessSubmitted {
-                Button("Submit Order") {
+                Button {
                     withAnimation(.easeInOut(duration: 0.25)) {
                         guessSubmitted = true
                     }
+                    orderedItems == ol.answer ? Haptic.success() : Haptic.error()
+                } label: {
+                    Text("SUBMIT")
+                        .brutalButton(fill: Brutal.yellow)
                 }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(.blue)
-                .foregroundStyle(.white)
-                .cornerRadius(12)
             } else {
                 let correct = orderedItems == ol.answer
-                Text(correct ? "Correct!" : "Not quite — check the order above.")
-                    .font(.headline)
-                    .foregroundStyle(correct ? .green : .red)
+                resultBadge(correct: correct)
             }
         }
         .padding(.horizontal, 24)
@@ -267,35 +339,36 @@ struct ModuleView: View {
         let keys = Array(mp.answer.keys).sorted()
         let values = Array(mp.answer.values).sorted()
 
-        return VStack(spacing: 24) {
-            Text(mp.question)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.center)
+        return VStack(spacing: 16) {
+            questionHeader(mp.question)
 
-            HStack(alignment: .top, spacing: 16) {
-                // Left column — keys
-                VStack(spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(spacing: 10) {
                     ForEach(keys, id: \.self) { key in
                         Button {
+                            Haptic.light()
                             selectedPairLeft = key
                         } label: {
                             Text(key)
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundStyle(Brutal.black)
                                 .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(selectedPairLeft == key ? Color.blue.opacity(0.3) : Color(.systemGray5))
-                                .foregroundStyle(.primary)
-                                .cornerRadius(12)
+                                .padding(.vertical, 12)
+                                .padding(.horizontal, 8)
+                                .brutalCard(fill: matchSelections[key] != nil
+                                    ? (mp.answer[key] == matchSelections[key] ? Brutal.green : Brutal.red)
+                                    : selectedPairLeft == key ? Brutal.blue : Brutal.white)
                         }
                         .disabled(matchSelections[key] != nil)
                     }
                 }
 
-                // Right column — values
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     ForEach(values, id: \.self) { value in
                         Button {
                             if let left = selectedPairLeft {
+                                Haptic.tap()
                                 withAnimation(.easeInOut(duration: 0.25)) {
                                     matchSelections[left] = value
                                     selectedPairLeft = nil
@@ -303,11 +376,13 @@ struct ModuleView: View {
                             }
                         } label: {
                             Text(value)
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundStyle(Brutal.black)
                                 .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(matchValueBackground(value, correct: mp.answer))
-                                .foregroundStyle(.primary)
-                                .cornerRadius(12)
+                                .padding(.vertical, 12)
+                                .padding(.horizontal, 8)
+                                .brutalCard(fill: matchValueBG(value, correct: mp.answer))
                         }
                         .disabled(matchSelections.values.contains(value))
                     }
@@ -316,97 +391,53 @@ struct ModuleView: View {
 
             if matchSelections.count == mp.answer.count {
                 let allCorrect = matchSelections.allSatisfy { mp.answer[$0.key] == $0.value }
-                Text(allCorrect ? "All matched correctly!" : "Some pairs are wrong.")
-                    .font(.headline)
-                    .foregroundStyle(allCorrect ? .green : .red)
+                resultBadge(correct: allCorrect)
             }
         }
         .padding(.horizontal, 24)
     }
 
-    private func matchValueBackground(_ value: String, correct: [String: String]) -> Color {
+    private func matchValueBG(_ value: String, correct: [String: String]) -> Color {
         if let matchedKey = matchSelections.first(where: { $0.value == value })?.key {
-            return correct[matchedKey] == value ? .green.opacity(0.3) : .red.opacity(0.3)
+            return correct[matchedKey] == value ? Brutal.green : Brutal.red
         }
-        return Color(.systemGray5)
+        return Brutal.white
     }
 
-    // MARK: - Guess Word
+    // MARK: - Result Badge
 
-    private func guessWordView(_ gw: GuessWordSchema) -> some View {
-        VStack(spacing: 24) {
-            Text(gw.question)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.center)
-
-            TextField("Type your answer...", text: $guessText)
-                .textFieldStyle(.roundedBorder)
-                .font(.body)
-                .disabled(guessSubmitted)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-
-            if !guessSubmitted {
-                Button("Submit") {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        guessSubmitted = true
-                    }
-                }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(.blue)
-                .foregroundStyle(.white)
-                .cornerRadius(12)
-            } else {
-                let correct = guessText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    .lowercased() == gw.answer.lowercased()
-                VStack(spacing: 8) {
-                    Text(correct ? "Correct!" : "Not quite.")
-                        .font(.headline)
-                        .foregroundStyle(correct ? .green : .red)
-                    if !correct {
-                        Text("Answer: \(gw.answer)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .padding(.horizontal, 24)
+    private func resultBadge(correct: Bool) -> some View {
+        Text(correct ? "CORRECT!" : "WRONG!")
+            .font(.headline)
+            .fontWeight(.black)
+            .tracking(2)
+            .foregroundStyle(Brutal.black)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 24)
+            .brutalCard(fill: correct ? Brutal.green : Brutal.red)
     }
 
     // MARK: - Shared Answer Button
 
     private func answerButton(_ answer: Answer) -> some View {
         Button {
+            Haptic.tap()
             withAnimation(.easeInOut(duration: 0.25)) {
                 selectedAnswer = answer.content
             }
         } label: {
             Text(answer.content)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(backgroundColor(for: answer))
-                .foregroundStyle(foregroundColor(for: answer))
-                .cornerRadius(12)
+                .brutalButton(fill: backgroundColor(for: answer))
         }
         .disabled(selectedAnswer != nil)
     }
 
     private func backgroundColor(for answer: Answer) -> Color {
-        guard let selected = selectedAnswer else { return Color(.systemGray5) }
+        guard let selected = selectedAnswer else { return Brutal.white }
         if answer.content == selected {
-            return answer.correct ? .green : .red
+            return answer.correct ? Brutal.green : Brutal.red
         }
-        if answer.correct { return .green.opacity(0.3) }
-        return Color(.systemGray5)
-    }
-
-    private func foregroundColor(for answer: Answer) -> Color {
-        guard let selected = selectedAnswer else { return .primary }
-        if answer.content == selected || answer.correct { return .white }
-        return .primary
+        if answer.correct { return Brutal.green }
+        return Brutal.white
     }
 }

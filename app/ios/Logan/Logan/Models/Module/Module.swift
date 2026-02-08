@@ -18,7 +18,6 @@ struct Module: Decodable, Identifiable {
         case trueOrFalse = "TrueOrFalse"
         case orderedList = "OrderedList"
         case matchPairs = "MatchPairs"
-        case guessWord = "GuessWord"
         case twoTruthsAndLie = "TwoTruthsAndLie"
         case whichCameFirst = "WhichCameFirst"
     }
@@ -49,9 +48,6 @@ struct Module: Decodable, Identifiable {
         case .matchPairs:
             let mp = try container.decode(MatchPairsSchema.self, forKey: .data)
             self.data = .matchPairs(mp)
-        case .guessWord:
-            let gw = try container.decode(GuessWordSchema.self, forKey: .data)
-            self.data = .guessWord(gw)
         case .twoTruthsAndLie:
             let tt = try container.decode(TwoTruthsAndLieSchema.self, forKey: .data)
             self.data = .twoTruthsAndLie(tt)
@@ -67,7 +63,6 @@ enum DataPayload: Decodable {
     case trueOrFalse(TrueOrFalseSchema)
     case orderedList(OrderedListSchema)
     case matchPairs(MatchPairsSchema)
-    case guessWord(GuessWordSchema)
     case twoTruthsAndLie(TwoTruthsAndLieSchema)
     case whichCameFirst(WhichCameFirstSchema)
 }

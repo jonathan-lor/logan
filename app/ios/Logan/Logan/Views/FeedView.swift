@@ -29,6 +29,7 @@ struct FeedView: View {
         .scrollIndicators(.hidden)
         .scrollTargetBehavior(.paging)
         .ignoresSafeArea()
+        .background(Color(red: 1.0, green: 0.99, blue: 0.95))
         .task {
             await feed.loadModules()
         }
