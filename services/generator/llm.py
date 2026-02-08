@@ -12,7 +12,7 @@ class llm:
     # returns question json from specified prompt
     def get_question_json(self, prompt: str):
         response = self.client.models.generate_content(
-            model="gemini-3-flash-preview",
+            model="gemini-2.5-flash",
             contents=prompt,
             config={
                 "response_mime_type": "application/json",

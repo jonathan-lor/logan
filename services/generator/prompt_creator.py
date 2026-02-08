@@ -24,7 +24,7 @@ class PromptCreator:
     def generate_prompt(self, user_prompt: str, num_questions: int) -> str:
         seeds = generate_seeds(num_questions)
 
-        return f"Random seed(s): {seeds}\n Generate {num_questions} question(s) about {user_prompt}. Each question, choice, and wording must be strongly influenced by their relative seed."
+        return f"Random seed(s): {seeds}\n Generate {num_questions} question(s) about {user_prompt}. Each question, choice, and wording must be strongly influenced by their relative seed. DO NOT INCLUDE THE SEED IN THE QUESTION, JUST BASE THE QUESTION OFF OF IT."
 
     def generate_topics(self, num_topics: int) -> str:
         seeds = generate_seeds(num_topics)
