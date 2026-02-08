@@ -29,10 +29,14 @@ enum APIError: Error, LocalizedError {
 }
 
 final class APIClient {
+    static let shared = APIClient(
+        baseURL: URL(string: "")!
+    )
+
     private let baseURL: URL
     private let session: URLSession
-    
-    init(baseURL: URL, session: URLSession = .shared) {
+
+    private init(baseURL: URL, session: URLSession = .shared) {
         self.baseURL = baseURL
         self.session = session
     }
@@ -68,5 +72,22 @@ final class APIClient {
         } catch {
             throw APIError.decoding(error)
         }
+    }
+}
+
+struct APIResponse<Item: Decodable>: Decodable {
+    let ok: Bool
+    let item: Item?
+    let error: String?
+}
+
+extension APIClient {
+    /// GETs `{ ok, item }` and returns the decoded `item`.
+    func getItem<T: Decodable>(_ path: String) async throws -> T {
+        let response: APIResponse<T> = try await get(path)
+        guard response.ok, let item = response.item else {
+            throw APIError.invalidResponse
+        }
+        return item
     }
 }

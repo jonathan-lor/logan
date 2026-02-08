@@ -18,7 +18,6 @@ struct FeedView: View {
                     ModuleView(num: item)
                         .containerRelativeFrame(.vertical, alignment: .center)
                         .onAppear {
-                            diddy()
                         }
                 }
             }
@@ -27,9 +26,20 @@ struct FeedView: View {
         .scrollIndicators(.hidden)
         .scrollTargetBehavior(.paging)
         .ignoresSafeArea()
+        .task {
+            await diddy2()
+        }
     }
 }
 
-func diddy() {
-    print("diddy")
+func diddy2() async {
+    print("diddy2")
+    
+    do {
+        //let result: APIResponse<Module> = try await api.get("/questions/random?tag=Pokemon")
+        let result: Module = try await APIClient.shared.getItem("/questions/random?tag=Pokemon")
+        print("yayaya \(result)")
+    } catch {
+        print("diddy2: an error occurred: \(error)")
+    }
 }

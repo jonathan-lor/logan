@@ -14,6 +14,7 @@ struct Module: Decodable {
     
     enum Kind: String, Decodable {
         case multipleChoice = "MultipleChoice"
+        // will be more here
     }
     
     enum CodingKeys: String, CodingKey {
