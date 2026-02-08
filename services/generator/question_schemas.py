@@ -69,8 +69,8 @@ class Question(BaseModel):
                   "WhichCameFirst", 
                   "MatchPairs", 
                   "OrderedList"]
-    tags: List[str]
-    explanation: str = Field("A brief but educational insight into the answer of the question as a factoid.")
+    tags: List[str] = Field(description="List of tags relevant to the question. These should be meaningful and to the point. Do not provide vague tags. Provide spaces if there are multiple words in one tag, do not combine words into one word")
+    explanation: str = Field("A brief but educational insight into the answer of the question as a factoid. 2 - 3 sentences MAX")
     data: Union[MultipleChoice, TrueOrFalse, TwoTruthsAndLie, WhichCameFirst, MatchPairs, OrderedList]
     
 
